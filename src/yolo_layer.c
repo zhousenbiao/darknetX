@@ -28,19 +28,31 @@ layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int 
     l.classes = classes;
     l.cost = calloc(1, sizeof(float));
     l.biases = calloc(total*2, sizeof(float));
+    //
+    l.calloc_memory += sizeof(float);
+    l.calloc_memory +=total*2*sizeof(float);
     if(mask) l.mask = mask;
     else{
         l.mask = calloc(n, sizeof(int));
+        //
+        l.calloc_memory += n*sizeof(int);
         for(i = 0; i < n; ++i){
             l.mask[i] = i;
         }
     }
     l.bias_updates = calloc(n*2, sizeof(float));
+    //
+    l.calloc_memory +=n*2*sizeof(float);
     l.outputs = h*w*n*(classes + 4 + 1);
     l.inputs = l.outputs;
     l.truths = 90*(4 + 1);
     l.delta = calloc(batch*l.outputs, sizeof(float));
     l.output = calloc(batch*l.outputs, sizeof(float));
+
+    //统计内存消耗
+    l.calloc_memory += 2*batch*l.outputs*sizeof(float);
+    l.calloc_memory = (int)(l.calloc_memory / (1024.0f*1024.0f) + 0.5);
+
     for(i = 0; i < total*2; ++i){
         l.biases[i] = .5;
     }
@@ -54,7 +66,7 @@ layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int 
     l.delta_gpu = cuda_make_array(l.delta, batch*l.outputs);
 #endif
 
-    fprintf(stderr, "yolo\n");
+    fprintf(stderr, "yolo    %dMB\n",l.calloc_memory);
     srand(0);
 
     return l;

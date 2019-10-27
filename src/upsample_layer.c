@@ -27,6 +27,10 @@ layer make_upsample_layer(int batch, int w, int h, int c, int stride)
     l.delta =  calloc(l.outputs*batch, sizeof(float));
     l.output = calloc(l.outputs*batch, sizeof(float));;
 
+    //统计内存消耗
+    l.calloc_memory += 2*l.outputs*batch*sizeof(float);
+    l.calloc_memory = (int)(l.calloc_memory / (1024.0f*1024.0f) + 0.5);
+
     l.forward = forward_upsample_layer;
     l.backward = backward_upsample_layer;
     #ifdef GPU
@@ -37,7 +41,7 @@ layer make_upsample_layer(int batch, int w, int h, int c, int stride)
     l.output_gpu = cuda_make_array(l.output, l.outputs*batch);
     #endif
     if(l.reverse) fprintf(stderr, "downsample         %2dx  %4d x%4d x%4d   ->  %4d x%4d x%4d\n", stride, w, h, c, l.out_w, l.out_h, l.out_c);
-    else fprintf(stderr, "upsample           %2dx  %4d x%4d x%4d   ->  %4d x%4d x%4d\n", stride, w, h, c, l.out_w, l.out_h, l.out_c);
+    else fprintf(stderr, "upsample           %2dx  %4d x%4d x%4d   ->  %4d x%4d x%4d   %dMB\n", stride, w, h, c, l.out_w, l.out_h, l.out_c, l.calloc_memory);
     return l;
 }
 

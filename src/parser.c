@@ -766,6 +766,7 @@ network *parse_network_cfg(char *filename)
     int count = 0;
     free_section(s);
     fprintf(stderr, "layer     filters    size              input                output\n");
+    int total_memory=0;
     while(n){
         params.index = count;
         fprintf(stderr, "%5d ", count);
@@ -775,6 +776,7 @@ network *parse_network_cfg(char *filename)
         LAYER_TYPE lt = string_to_layer_type(s->type);
         if(lt == CONVOLUTIONAL){
             l = parse_convolutional(options, params);
+            total_memory+=l.calloc_memory;
         }else if(lt == DECONVOLUTIONAL){
             l = parse_deconvolutional(options, params);
         }else if(lt == LOCAL){
@@ -803,6 +805,7 @@ network *parse_network_cfg(char *filename)
             l = parse_region(options, params);
         }else if(lt == YOLO){
             l = parse_yolo(options, params);
+            total_memory+=l.calloc_memory;
         }else if(lt == ISEG){
             l = parse_iseg(options, params);
         }else if(lt == DETECTION){
@@ -822,10 +825,13 @@ network *parse_network_cfg(char *filename)
             l = parse_avgpool(options, params);
         }else if(lt == ROUTE){
             l = parse_route(options, params, net);
+            total_memory+=l.calloc_memory;
         }else if(lt == UPSAMPLE){
             l = parse_upsample(options, params, net);
+            total_memory+=l.calloc_memory;
         }else if(lt == SHORTCUT){
             l = parse_shortcut(options, params, net);
+            total_memory+=l.calloc_memory;
         }else if(lt == DROPOUT){
             l = parse_dropout(options, params);
             l.output = net->layers[count-1].output;
@@ -859,7 +865,11 @@ network *parse_network_cfg(char *filename)
             params.c = l.out_c;
             params.inputs = l.outputs;
         }
+
+
     }
+    fprintf(stderr, "Total mems：    %dMB\n",total_memory);
+
     free_list(sections);
     layer out = get_network_output_layer(net);
     net->outputs = out.outputs;

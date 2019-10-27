@@ -182,6 +182,7 @@ network *make_network(int n)
     net->seen = calloc(1, sizeof(size_t));
     net->t    = calloc(1, sizeof(int));
     net->cost = calloc(1, sizeof(float));
+
     return net;
 }
 

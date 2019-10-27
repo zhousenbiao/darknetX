@@ -24,7 +24,9 @@ layer make_shortcut_layer(int batch, int index, int w, int h, int c, int w2, int
     l.index = index;
 
     l.delta =  calloc(l.outputs*batch, sizeof(float));
-    l.output = calloc(l.outputs*batch, sizeof(float));;
+    l.output = calloc(l.outputs*batch, sizeof(float));
+    l.calloc_memory += l.batch*l.outputs*sizeof(float);
+    l.calloc_memory += l.batch*l.outputs*sizeof(float);
 
     l.forward = forward_shortcut_layer;
     l.backward = backward_shortcut_layer;
@@ -35,6 +37,8 @@ layer make_shortcut_layer(int batch, int index, int w, int h, int c, int w2, int
     l.delta_gpu =  cuda_make_array(l.delta, l.outputs*batch);
     l.output_gpu = cuda_make_array(l.output, l.outputs*batch);
     #endif
+    l.calloc_memory = (int)(l.calloc_memory / (1024.0f*1024.0f) + 0.5);
+    fprintf(stderr, "res layer memory: %dMB\n", l.calloc_memory);
     return l;
 }
 

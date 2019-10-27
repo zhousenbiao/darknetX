@@ -25,6 +25,9 @@ route_layer make_route_layer(int batch, int n, int *input_layers, int *input_siz
     l.delta =  calloc(outputs*batch, sizeof(float));
     l.output = calloc(outputs*batch, sizeof(float));;
 
+    l.calloc_memory += outputs*batch*sizeof(float);
+    l.calloc_memory += outputs*batch*sizeof(float);
+
     l.forward = forward_route_layer;
     l.backward = backward_route_layer;
     #ifdef GPU
@@ -34,6 +37,8 @@ route_layer make_route_layer(int batch, int n, int *input_layers, int *input_siz
     l.delta_gpu =  cuda_make_array(l.delta, outputs*batch);
     l.output_gpu = cuda_make_array(l.output, outputs*batch);
     #endif
+    l.calloc_memory = (int)(l.calloc_memory / (1024.0f*1024.0f) + 0.5);
+    fprintf(stderr, "route layer memory: %dMB\n", l.calloc_memory);
     return l;
 }
 

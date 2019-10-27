@@ -113,6 +113,8 @@ struct layer;
 typedef struct layer layer;
 
 struct layer{
+    //统计每一层消耗的内存
+    int calloc_memory;
     LAYER_TYPE type;
     ACTIVATION activation;
     COST_TYPE cost_type;

@@ -201,6 +201,11 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
     l.nweights = c/groups*n*size*size;
     l.nbiases = n;
 
+    l.calloc_memory += l.nweights*sizeof(float);
+    l.calloc_memory += l.nweights*sizeof(float);
+    l.calloc_memory += l.nbiases*sizeof(float);
+    l.calloc_memory += l.nbiases*sizeof(float);
+
     // float scale = 1./sqrt(size*size*c);
     float scale = sqrt(2./(size*size*c/l.groups));
     //printf("convscale %f\n", scale);
@@ -218,6 +223,9 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
     l.output = calloc(l.batch*l.outputs, sizeof(float));
     l.delta  = calloc(l.batch*l.outputs, sizeof(float));
 
+    l.calloc_memory += l.batch*l.outputs*sizeof(float);
+    l.calloc_memory += l.batch*l.outputs*sizeof(float);
+
     l.forward = forward_convolutional_layer;
     l.backward = backward_convolutional_layer;
     l.update = update_convolutional_layer;
@@ -225,6 +233,10 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
         l.binary_weights = calloc(l.nweights, sizeof(float));
         l.cweights = calloc(l.nweights, sizeof(char));
         l.scales = calloc(n, sizeof(float));
+
+//        l.calloc_memory += l.nweights*sizeof(float);
+//        l.calloc_memory += l.nweights*sizeof(char);
+//        l.calloc_memory += n*sizeof(float);
     }
     if(xnor){
         l.binary_weights = calloc(l.nweights, sizeof(float));
@@ -248,6 +260,9 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
         l.rolling_variance = calloc(n, sizeof(float));
         l.x = calloc(l.batch*l.outputs, sizeof(float));
         l.x_norm = calloc(l.batch*l.outputs, sizeof(float));
+
+        l.calloc_memory += 8*n*sizeof(float);
+        l.calloc_memory += 2*l.batch*l.outputs*sizeof(float);
     }
     if(adam){
         l.m = calloc(l.nweights, sizeof(float));
@@ -322,8 +337,10 @@ convolutional_layer make_convolutional_layer(int batch, int h, int w, int c, int
     l.workspace_size = get_workspace_size(l);
     l.activation = activation;
 
-    fprintf(stderr, "conv  %5d %2d x%2d /%2d  %4d x%4d x%4d   ->  %4d x%4d x%4d  %5.3f BFLOPs\n", n, size, size, stride, w, h, c, l.out_w, l.out_h, l.out_c, (2.0 * l.n * l.size*l.size*l.c/l.groups * l.out_h*l.out_w)/1000000000.);
+//    fprintf(stderr, "conv  %5d %2d x%2d /%2d  %4d x%4d x%4d   ->  %4d x%4d x%4d  %5.3f BFLOPs\n", n, size, size, stride, w, h, c, l.out_w, l.out_h, l.out_c, (2.0 * l.n * l.size*l.size*l.c/l.groups * l.out_h*l.out_w)/1000000000.);
 
+    l.calloc_memory = (int)(l.calloc_memory / (1024.0f*1024.0f) + 0.5);
+    fprintf(stderr, "conv  %5d %2d x%2d /%2d  %4d x%4d x%4d   ->  %4d x%4d x%4d %5.3f BF  %dMB\n", n, size, size, stride, w, h, c, l.out_w, l.out_h, l.out_c, (2.0 * l.n * l.size*l.size*l.c/l.groups * l.out_h*l.out_w)/1000000000., l.calloc_memory);
     return l;
 }
 
